@@ -1,0 +1,42 @@
+apiVersion: apps/v1 # Version of the k8s api to use, apps is a group of resources for deployments.
+kind: Deployment # This is a deployment resource
+metadata: 
+  name: mytriotaskflaskapp # Name of the deployment
+  labels:
+    app: mytriotaskflaskapp # Labels for the deployment - organisational purposes
+spec: 
+  replicas: 2 # Desired number of pods
+  selector: 
+    matchLabels:
+      app: mytriotaskflaskapp # Specify which pods are controlled by this deployment. looks for tag "nginx" on pods
+  strategy: # This specifies the deployment strategy to use and is applied when new version is used
+    rollingUpdate: # This is default. Other is recreate (tears down and rebuilds our pods) - rolling update incrementally changes our pods to run the new image
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata: # Metadata for the pods
+      labels:
+        app: mytriotaskflaskapp # This is the label assigned to the pods
+    spec: 
+      containers:
+      - name: mytriotaskflaskapp
+        image: chrisreeves1/mytriotaskflaskapp:2.0 # Image for the container/pods
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: password
+        ports:
+          - containerPort: 5000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mytriotaskflaskapp
+spec:
+  type: LoadBalancer # set the type of Service
+  selector:
+    app: mytriotaskflaskapp # referencing the Pod's label
+  ports:
+  - protocol: TCP
+    port: 5000
+    targetPort: 5000

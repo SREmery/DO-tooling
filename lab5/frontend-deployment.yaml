@@ -1,0 +1,37 @@
+apiVersion: apps/v1 # Version of the k8s api to use, apps is a group of resources for deployments.
+kind: Deployment # This is a deployment resource
+metadata: 
+  name: frontend-deployment # Name of the deployment
+  labels:
+    app: frontend-deployment # Labels for the deployment - organisational purposes
+spec: 
+  replicas: 2 # Desired number of pods
+  selector: 
+    matchLabels:
+      app: frontend-pod # Specify which pods are controlled by this deployment. looks for tag "nginx" on pods
+  strategy: # This specifies the deployment strategy to use and is applied when new version is used
+    rollingUpdate: # This is default. Other is recreate (tears down and rebuilds our pods) - rolling update incrementally changes our pods to run the new image
+      maxSurge: 25%
+      maxUnavailable: 18%
+  template:
+    metadata: # Metadata for the pods
+      labels:
+        app: frontend-pod # This is the label assigned to the pods
+    spec: 
+      containers:
+      - name: frontend-container
+        image: reeceqa/python-frontend # Image for the container/pods
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  type: LoadBalancer # set the type of Service
+  selector:
+    app: frontend-pod # referencing the Pod's label
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
